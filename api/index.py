@@ -89,10 +89,7 @@ def get_knowledge() -> Dict[str, Any]:
         candidates = [
             base_file.parent.parent / "data" / "embedded_knowledge.json",
             base_file.parent / "data" / "embedded_knowledge.json",
-            base_file.parent / ".." / "data" / "embedded_knowledge.json",
-            base_file.parent / ".." / "frontend" / "data" / "embedded_knowledge.json",
             Path.cwd() / "data" / "embedded_knowledge.json",
-            Path.cwd() / "frontend" / "data" / "embedded_knowledge.json",
         ]
         chosen_path = None
         for cand in candidates:
