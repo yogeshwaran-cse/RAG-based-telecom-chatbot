@@ -181,8 +181,8 @@ telecom RAG/
     - Added root `package.json` with scripts delegating `npm run dev` and `npm run build` directly to `frontend/`.
     - Created FastAPI server in `src/api.py` exposing `/api/chat` and `/api/health` with CORS support for local development (`localhost:5173`) and Vercel domains (`*.vercel.app`).
     - Updated `TELECOM_SYSTEM_PROMPT` in `src/rag_chain.py` to remove all bracketed citations (`[Source: ...]`) and metadata tags, ensuring direct, professional, citation-free answers.
-    - Added `vercel.json` at root and in `frontend/` preconfigured for Vercel SPA deployment.
     - Verified production build (`npm run build`) and dev proxy (`http://localhost:5173/api/health`).
+    - Staged and committed changes in commit `f4866e3`.
 
 ---
 
