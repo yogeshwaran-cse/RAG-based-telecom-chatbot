@@ -1,5 +1,6 @@
 """Vercel Serverless Function entrypoint for Telecom RAG API.
-Self-contained handler for maximum compatibility with both root and subfolder Vercel setups.
+Ultra-lightweight direct implementation using standard HTTP client (httpx) to stay well below
+Vercel's 500 MB serverless function uncompressed bundle limit.
 """
 
 import os
@@ -13,10 +14,7 @@ from typing import List, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.documents import Document
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,8 +25,8 @@ logger = logging.getLogger("telecom-serverless-api")
 
 app = FastAPI(
     title="Telecom RAG API",
-    description="Vercel Serverless Function for Telecom RAG Support Chatbot",
-    version="1.0.0",
+    description="Ultra-lightweight Vercel Serverless Function for Telecom RAG Support Chatbot",
+    version="1.1.0",
 )
 
 # Enable CORS for all origins
@@ -64,6 +62,14 @@ COLLECTION_MANUALS = "telecom_manuals"
 COLLECTION_DB = "telecom_tickets_db"
 
 
+class Document:
+    """Lightweight document container replacing langchain_core.documents.Document."""
+
+    def __init__(self, page_content: str, metadata: Dict[str, Any] = None):
+        self.page_content = page_content
+        self.metadata = metadata or {}
+
+
 def get_api_key() -> str:
     """Retrieve Google Gemini API key from environment."""
     key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
@@ -75,14 +81,14 @@ def get_chat_model_name() -> str:
 
 
 def get_embedding_model_name() -> str:
-    return os.getenv("GEMINI_EMBEDDING_MODEL", "models/gemini-embedding-001")
+    return os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
 
 
 _KNOWLEDGE_CACHE = None
 
 
 def get_knowledge() -> Dict[str, Any]:
-    """Load pre-embedded knowledge vectors into memory from possible path candidates."""
+    """Load pre-embedded knowledge vectors into memory from canonical path."""
     global _KNOWLEDGE_CACHE
     if _KNOWLEDGE_CACHE is None:
         base_file = Path(__file__).resolve()
@@ -112,7 +118,7 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     """Compute cosine similarity between two vectors."""
     dot = sum(a * b for a, b in zip(v1, v2))
     norm1 = math.sqrt(sum(a * a for a, b in zip(v1, v2)))
-    norm2 = math.sqrt(sum(b * b for a, b in zip(v1, v2)))
+    norm2 = math.sqrt(sum(b * b for b in v2))
     return dot / (norm1 * norm2) if norm1 and norm2 else 0.0
 
 
@@ -145,6 +151,60 @@ def format_docs_with_sources(docs: List[Document]) -> str:
     return "\n\n".join(formatted_chunks)
 
 
+def embed_text_direct(text: str, api_key: str, model_name: str) -> List[float]:
+    """Embed input query directly via Gemini REST API without heavy SDKs."""
+    clean_model = model_name.replace("models/", "")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:embedContent?key={api_key}"
+    payload = {"content": {"parts": [{"text": text}]}}
+
+    with httpx.Client(timeout=30.0) as client:
+        resp = client.post(url, json=payload)
+        if resp.status_code != 200:
+            raise RuntimeError(f"Gemini Embedding API returned {resp.status_code}: {resp.text}")
+        data = resp.json()
+        embedding = data.get("embedding", {}).get("values")
+        if not embedding:
+            raise RuntimeError(f"No embedding returned in Gemini response: {data}")
+        return embedding
+
+
+def generate_chat_direct(question: str, context: str, api_key: str, model_name: str) -> str:
+    """Call Gemini generateContent directly via REST API with fallback support."""
+    clean_model = model_name.replace("models/", "")
+    system_text = TELECOM_SYSTEM_PROMPT.format(context=context)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={api_key}"
+
+    payload = {
+        "system_instruction": {
+            "parts": [{"text": system_text}]
+        },
+        "contents": [
+            {"role": "user", "parts": [{"text": question}]}
+        ],
+        "generationConfig": {
+            "temperature": 0.2
+        }
+    }
+
+    with httpx.Client(timeout=45.0) as client:
+        resp = client.post(url, json=payload)
+        if resp.status_code == 404 and clean_model != "gemini-3.5-flash-lite":
+            logger.warning(f"Model {clean_model} returned 404, falling back to gemini-3.5-flash-lite")
+            fallback_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={api_key}"
+            resp = client.post(fallback_url, json=payload)
+
+        if resp.status_code != 200:
+            raise RuntimeError(f"Gemini Chat API returned {resp.status_code}: {resp.text}")
+
+        data = resp.json()
+        candidates = data.get("candidates", [])
+        if not candidates:
+            return "Unable to generate answer from context."
+
+        parts = candidates[0].get("content", {}).get("parts", [])
+        return "".join(part.get("text", "") for part in parts).strip()
+
+
 def retrieve_serverless_documents(
     query: str, top_k_per_source: int = 3
 ) -> List[Document]:
@@ -156,11 +216,7 @@ def retrieve_serverless_documents(
             "Missing Gemini API Key. Please configure GEMINI_API_KEY in Vercel Environment Variables."
         )
 
-    embeddings_model = GoogleGenerativeAIEmbeddings(
-        model=get_embedding_model_name(),
-        google_api_key=api_key,
-    )
-    query_vector = embeddings_model.embed_query(query)
+    query_vector = embed_text_direct(query, api_key, get_embedding_model_name())
 
     retrieved_docs: List[Document] = []
     seen_contents = set()
@@ -188,29 +244,12 @@ def query_serverless_rag(question: str) -> Dict[str, Any]:
     formatted_context = format_docs_with_sources(docs)
 
     api_key = get_api_key()
-    llm = ChatGoogleGenerativeAI(
-        model=get_chat_model_name(),
-        google_api_key=api_key,
-        temperature=0.2,
+    answer_text = generate_chat_direct(
+        question=question,
+        context=formatted_context,
+        api_key=api_key,
+        model_name=get_chat_model_name(),
     )
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", TELECOM_SYSTEM_PROMPT),
-        ("human", "{question}"),
-    ])
-
-    messages = prompt.format_messages(context=formatted_context, question=question)
-    response = llm.invoke(messages)
-
-    answer_text = response.content
-    if isinstance(answer_text, list):
-        text_parts = []
-        for part in answer_text:
-            if isinstance(part, dict) and "text" in part:
-                text_parts.append(part["text"])
-            elif isinstance(part, str):
-                text_parts.append(part)
-        answer_text = "\n".join(text_parts)
 
     return {
         "question": question,

@@ -1,6 +1,12 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "data/embedded_knowledge.json",
+      "excludeFiles": "{frontend/**,node_modules/**,src/**,chroma_db/**,test_rag.py}"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

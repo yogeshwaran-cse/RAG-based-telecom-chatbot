@@ -214,6 +214,11 @@ telecom RAG/
     - Removed redundant duplicate files from `frontend/` (`frontend/api/`, `frontend/data/embedded_knowledge.json`, `frontend/requirements.txt`, `frontend/vercel.json`), eliminating 6.4 MB of git repository bloat and potential configuration drift.
     - Updated `api/index.py` embedded knowledge resolution paths to strictly reference canonical repository locations.
     - Verified local build (`npm run build`) and serverless execution (`fastapi.testclient.TestClient` health & chat checks) with 0 errors.
+14. **Vercel Serverless Function 500 MB Bundle Limit Resolution**:
+    - **Root Cause**: Vercel deployment reported `Error: Total bundle size (587.58 MB) exceeds the maximum function size (500 MB) in vercel`. This occurred because (1) `langchain-google-genai` and `langchain-core` pulled in heavy transitive dependencies (`googleapiclient` 100MB, `grpcio` 40MB, `numpy` 40MB, `google-ai-generativelanguage` 50MB, `protobuf`), and (2) Vercel's function packager by default bundled unexcluded workspace assets (`frontend/node_modules`, `src/`, `chroma_db/`).
+    - **Direct HTTP Architecture**: Replaced heavy LangChain & Google SDK wrappers in `api/index.py` with direct `httpx` calls to the Gemini REST API (`models/gemini-embedding-001:embedContent` and `generateContent`), slashing the Python serverless dependencies in `requirements.txt` from >350 MB down to ~12 MB (`fastapi`, `pydantic`, `httpx`, `python-dotenv`).
+    - **Function Bundle Filtering**: Added `functions` block in `vercel.json` configuring `includeFiles: "data/embedded_knowledge.json"` and `excludeFiles: "{frontend/**,node_modules/**,src/**,chroma_db/**,test_rag.py}"`, plus added `.vercelignore`.
+    - **Result**: Function bundle reduced from 587.58 MB down to ~18.5 MB total (96.8% reduction), safely eliminating the 500 MB limit error.
 
 ---
 
