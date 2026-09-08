@@ -190,6 +190,13 @@ telecom RAG/
     - Created multi-stage `Dockerfile` and `render.yaml` blueprint for 1-click backend deployment to Render / Railway / Docker.
     - Updated `src/api.py` startup event to automatically verify and ingest vectorstores if missing, added root status endpoint `GET /`, and dynamic port binding (`PORT`).
     - Enhanced error handling in `frontend/src/api.js` to explicitly notify if `VITE_API_URL` is unconfigured.
+12. **100% Vercel-Only Fullstack Serverless Architecture**:
+    - User requested deploying exclusively to Vercel without external services (e.g. Render).
+    - Solved Vercel AWS Lambda bundle size limit (250MB limit) and SQLite native mismatch by pre-exporting all 92 vector embeddings from ChromaDB into `data/embedded_knowledge.json`.
+    - Created Vercel Serverless Function entrypoint in `api/index.py` using FastAPI, performing lightning-fast cosine similarity across the 3 knowledge sources with zero heavy dependencies (`chromadb`, `onnxruntime`, `grpcio` eliminated from serverless bundle).
+    - Reduced Vercel Python package bundle from >450MB down to <30MB in `requirements.txt`.
+    - Configured `vercel.json` rewrites to route `/api/(.*)` to `api/index.py` and SPA routes to `frontend/dist/index.html`.
+    - Verified `api/index.py` with `fastapi.testclient.TestClient` (`200 OK` on `/api/health` and `/api/chat`).
 
 ---
 

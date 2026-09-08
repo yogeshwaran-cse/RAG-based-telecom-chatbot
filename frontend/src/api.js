@@ -25,7 +25,7 @@ export async function askTelecomAI(question) {
   if (!response.ok) {
     if ((response.status === 405 || response.status === 404) && !BASE_URL) {
       throw new Error(
-        'The backend API is not configured on this frontend. In your Vercel Project Settings > Environment Variables, please add VITE_API_URL pointing to your deployed Python backend (e.g., https://your-backend.onrender.com).'
+        'The backend at /api/chat is not reachable. Please check your Vercel deployment and ensure GEMINI_API_KEY is configured in Vercel Environment Variables.'
       );
     }
 
