@@ -114,11 +114,19 @@ Open **`http://localhost:5173`** in your browser.
 npm run build
 ```
 
-**Deploying to Vercel:**
-1. Push this repository to your GitHub account.
-2. In Vercel, import the repository.
-3. Vercel will automatically detect `vercel.json` and build the application (`npm --prefix frontend run build`).
-4. Set the environment variable `VITE_API_URL` to your hosted backend URL.
+**Deploying Frontend to Vercel & Backend to Render:**
+1. **Frontend (Vercel)**:
+   - Import this GitHub repository into Vercel.
+   - Vercel automatically detects `vercel.json` and builds the frontend.
+2. **Backend (Render / Railway / Docker)**:
+   - Create a free Web Service on [Render.com](https://render.com) using this repository (or use the included `render.yaml` Blueprint).
+   - Set environment variables on Render:
+     - `GEMINI_API_KEY`: Your Google Gemini API key.
+   - Once deployed, Render will provide a backend URL (e.g., `https://telecom-rag-api.onrender.com`).
+3. **Connect Frontend to Backend**:
+   - In your Vercel Project Settings > **Environment Variables**, add:
+     - `VITE_API_URL` = `https://your-backend-app.onrender.com`
+   - Trigger a redeployment in Vercel.
 
 ### 4. Interactive Terminal Chat (Ask Questions)
 By default, running `test_rag.py` opens an interactive CLI where you can ask any question:

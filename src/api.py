@@ -7,6 +7,8 @@ import logging
 
 from src.rag_chain import query_telecom_rag
 from src.config import validate_config
+from src.ingestion import ingest_all_sources
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,12 +47,28 @@ class ChatResponse(BaseModel):
 
 @app.on_event("startup")
 def startup_event():
-    """Validate environment configuration on startup."""
+    """Validate environment and ensure ChromaDB collections are populated."""
     try:
         validate_config()
+        # Automatically ingest documents if collections do not exist yet (e.g. on fresh cloud deployments)
+        ingest_all_sources(force=False)
         logger.info("Telecom RAG API started successfully.")
     except Exception as exc:
         logger.error(f"Startup validation failed: {exc}")
+
+
+@app.get("/")
+def root_endpoint():
+    """Root endpoint for status inspection."""
+    return {
+        "status": "online",
+        "service": "Telecom RAG Chatbot API",
+        "endpoints": {
+            "health": "/api/health",
+            "chat": "/api/chat",
+            "docs": "/docs",
+        },
+    }
 
 
 @app.get("/api/health")
@@ -79,3 +97,9 @@ def chat_endpoint(request: ChatRequest):
             status_code=500,
             detail=f"Failed to process telecom query: {str(exc)}",
         )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("src.api:app", host="0.0.0.0", port=port, reload=False)

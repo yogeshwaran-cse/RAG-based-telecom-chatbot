@@ -183,6 +183,13 @@ telecom RAG/
     - Updated `TELECOM_SYSTEM_PROMPT` in `src/rag_chain.py` to remove all bracketed citations (`[Source: ...]`) and metadata tags, ensuring direct, professional, citation-free answers.
     - Verified production build (`npm run build`) and dev proxy (`http://localhost:5173/api/health`).
     - Staged and committed changes in commit `f4866e3`.
+11. **Vercel 405 Method Not Allowed Resolution & Backend Cloud Deployment Setup**:
+    - Diagnosed the issue where asking questions on `https://rag-based-telecom-chatbot.vercel.app/` resulted in the template error: `"Sorry, an error occurred: Failed to get answer from server. Please ensure the backend is running."`
+    - Root cause: Vercel only serves the static React frontend. Because `VITE_API_URL` was not configured in Vercel environment variables, the frontend sent `POST /api/chat` to Vercel itself, which hit static rewrites and yielded `405 Method Not Allowed`.
+    - Generated production-locked `requirements.txt` via `uv pip compile`.
+    - Created multi-stage `Dockerfile` and `render.yaml` blueprint for 1-click backend deployment to Render / Railway / Docker.
+    - Updated `src/api.py` startup event to automatically verify and ingest vectorstores if missing, added root status endpoint `GET /`, and dynamic port binding (`PORT`).
+    - Enhanced error handling in `frontend/src/api.js` to explicitly notify if `VITE_API_URL` is unconfigured.
 
 ---
 
