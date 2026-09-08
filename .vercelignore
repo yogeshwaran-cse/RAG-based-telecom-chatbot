@@ -1,15 +1,19 @@
-# Python local virtual environments & caches
-.venv/
-venv/
-chroma_db/
-src/
-test_rag.py
-uv.lock
+# Python local virtual environments & caches (anchored to root)
+/.venv/
+/venv/
+/chroma_db/
+/src/
+/test_rag.py
+/uv.lock
 
-# Source document files (the serverless function only needs data/embedded_knowledge.json)
-data/faqs.csv
-data/telecom_technical_guide.pdf
-data/tickets.db
+# Ensure frontend source is NEVER ignored
+!frontend/src/
+!frontend/src/**
+
+# Source document files (anchored to root data/)
+/data/faqs.csv
+/data/telecom_technical_guide.pdf
+/data/tickets.db
 
 # Standard ignores
 .git/

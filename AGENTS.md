@@ -223,6 +223,9 @@ telecom RAG/
     - **Root Cause**: Even though `requirements.txt` was reduced to 4 packages, Vercel's Python builder prioritizes `pyproject.toml` and `uv.lock` over `requirements.txt`. Because `pyproject.toml` contained all local heavy libraries (`chromadb`, `langchain`, `onnxruntime`, `grpcio`), Vercel installed 455+ MB of packages into the serverless environment, yielding a bundle of 528.82 MB (> 500 MB limit).
     - **Dependency Segregation**: Moved heavy local-only packages (`chromadb`, `langchain`, `google-generativeai`, `pypdf`, `rich`, `uvicorn`) into `[project.optional-dependencies] dev = [...]` in `pyproject.toml`. Main `dependencies` now only contains the 4 serverless packages (`fastapi`, `pydantic`, `httpx`, `python-dotenv`).
     - **Lockfile & Vercel Ignore**: Updated `uv.lock` via `uv lock`, created `api/requirements.txt`, and expanded `.vercelignore` to exclude `uv.lock`, `src/`, `test_rag.py`, and raw docs (`data/*.csv`, `data/*.pdf`, `data/*.db`), ensuring Vercel installs only ~12 MB of dependencies.
+16. **Vite `Failed to resolve /src/main.jsx` Vercel Ignore Fix**:
+    - **Root Cause**: `.vercelignore` originally contained an unanchored pattern `src/`. In gitignore syntax, an unanchored directory pattern matches all directories named `src` at any depth, which caused Vercel to ignore `frontend/src/`. During `vite build`, Vite could not find `/src/main.jsx`.
+    - **Fix**: Anchored the Python source ignore rule to root `/.venv/`, `/venv/`, `/chroma_db/`, `/src/`, and explicitly added whitelist rules `!frontend/src/` and `!frontend/src/**`.
 
 ---
 
