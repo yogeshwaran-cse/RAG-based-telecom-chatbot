@@ -1,0 +1,7 @@
+# Minimal requirements for Vercel Serverless Function deployment
+fastapi>=0.111.0
+uvicorn>=0.30.0
+pydantic>=2.0.0
+langchain-core>=0.2.0
+langchain-google-genai>=1.0.0
+python-dotenv>=1.0.0
