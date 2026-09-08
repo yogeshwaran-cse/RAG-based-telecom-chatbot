@@ -219,6 +219,10 @@ telecom RAG/
     - **Direct HTTP Architecture**: Replaced heavy LangChain & Google SDK wrappers in `api/index.py` with direct `httpx` calls to the Gemini REST API (`models/gemini-embedding-001:embedContent` and `generateContent`), slashing the Python serverless dependencies in `requirements.txt` from >350 MB down to ~12 MB (`fastapi`, `pydantic`, `httpx`, `python-dotenv`).
     - **Function Bundle Filtering**: Added `functions` block in `vercel.json` configuring `includeFiles: "data/embedded_knowledge.json"` and `excludeFiles: "{frontend/**,node_modules/**,src/**,chroma_db/**,test_rag.py}"`, plus added `.vercelignore`.
     - **Result**: Function bundle reduced from 587.58 MB down to ~18.5 MB total (96.8% reduction), safely eliminating the 500 MB limit error.
+15. **Vercel 528.82 MB `pyproject.toml` Dependency Segregation**:
+    - **Root Cause**: Even though `requirements.txt` was reduced to 4 packages, Vercel's Python builder prioritizes `pyproject.toml` and `uv.lock` over `requirements.txt`. Because `pyproject.toml` contained all local heavy libraries (`chromadb`, `langchain`, `onnxruntime`, `grpcio`), Vercel installed 455+ MB of packages into the serverless environment, yielding a bundle of 528.82 MB (> 500 MB limit).
+    - **Dependency Segregation**: Moved heavy local-only packages (`chromadb`, `langchain`, `google-generativeai`, `pypdf`, `rich`, `uvicorn`) into `[project.optional-dependencies] dev = [...]` in `pyproject.toml`. Main `dependencies` now only contains the 4 serverless packages (`fastapi`, `pydantic`, `httpx`, `python-dotenv`).
+    - **Lockfile & Vercel Ignore**: Updated `uv.lock` via `uv lock`, created `api/requirements.txt`, and expanded `.vercelignore` to exclude `uv.lock`, `src/`, `test_rag.py`, and raw docs (`data/*.csv`, `data/*.pdf`, `data/*.db`), ensuring Vercel installs only ~12 MB of dependencies.
 
 ---
 

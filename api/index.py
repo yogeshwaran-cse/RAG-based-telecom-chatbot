@@ -9,7 +9,7 @@ import math
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -65,7 +65,7 @@ COLLECTION_DB = "telecom_tickets_db"
 class Document:
     """Lightweight document container replacing langchain_core.documents.Document."""
 
-    def __init__(self, page_content: str, metadata: Dict[str, Any] = None):
+    def __init__(self, page_content: str, metadata: Optional[Dict[str, Any]] = None):
         self.page_content = page_content
         self.metadata = metadata or {}
 

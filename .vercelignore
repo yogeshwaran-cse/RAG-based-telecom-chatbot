@@ -1,10 +1,21 @@
-# Vercel deployment ignore rules
+# Python local virtual environments & caches
 .venv/
 venv/
 chroma_db/
+src/
+test_rag.py
+uv.lock
+
+# Source document files (the serverless function only needs data/embedded_knowledge.json)
+data/faqs.csv
+data/telecom_technical_guide.pdf
+data/tickets.db
+
+# Standard ignores
 .git/
 *.pyc
 __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
