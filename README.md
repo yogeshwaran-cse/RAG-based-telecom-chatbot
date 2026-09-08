@@ -95,28 +95,51 @@ uv venv --python 3.12
 uv sync
 ```
 
-### 3. Interactive Terminal Chat (Ask Questions)
-By default, running `test_rag.py` opens an interactive chat where you can ask any question:
+### 3. Web Frontend (React + FastAPI)
+You can launch the web application in two steps:
+
+**Step A: Start the FastAPI Backend API**
 ```bash
-uv run python test_rag.py
-# Or explicitly:
-uv run python test_rag.py --interactive
+uv run uvicorn src.api:app --host 127.0.0.1 --port 8000
 ```
 
-### 4. Ask a Single Question Directly
+**Step B: Start the React Frontend**
+```bash
+npm run dev
+```
+Open **`http://localhost:5173`** in your browser.
+
+**Build for Production:**
+```bash
+npm run build
+```
+
+**Deploying to Vercel:**
+1. Push this repository to your GitHub account.
+2. In Vercel, import the repository.
+3. Vercel will automatically detect `vercel.json` and build the application (`npm --prefix frontend run build`).
+4. Set the environment variable `VITE_API_URL` to your hosted backend URL.
+
+### 4. Interactive Terminal Chat (Ask Questions)
+By default, running `test_rag.py` opens an interactive CLI where you can ask any question:
+```bash
+uv run python test_rag.py
+```
+
+### 5. Ask a Single Question Directly
 You can also pass your question directly as a command-line argument:
 ```bash
 uv run python test_rag.py "How do I activate international roaming?"
 uv run python test_rag.py "Are there any active cell tower outages in Northridge?"
 ```
 
-### 5. Run Automated Benchmark Suite
+### 6. Run Automated Benchmark Suite
 To run the automated verification suite across all 3 domains:
 ```bash
 uv run python test_rag.py --benchmark
 ```
 
-### 6. Re-ingest Data (Optional)
+### 7. Re-ingest Data (Optional)
 To force-rebuild the ChromaDB vector database:
 ```bash
 uv run python src/ingestion.py --force

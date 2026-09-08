@@ -176,7 +176,13 @@ telecom RAG/
    - Updated `.gitignore` to explicitly ignore `.env` and `.env.*` patterns, while allowing template file `!.env.example`.
    - Created `.env.example` template with sanitized placeholder keys (`"your_gemini_api_key_here"`) matching validation rules in `src/config.py`.
    - Verified ignore rules using `git check-ignore -v .env` and `git status --ignored` to guarantee that `.env`, `.venv/`, and `chroma_db/` remain untracked.
-   - Set standard branch name `main` (`git branch -M main`), created clean root commit `342eced`, and pushed to remote origin: `https://github.com/yogeshwaran-cse/RAG-based-telecom-chatbot.git`.
+10. **React Frontend & Vercel Deployment Implementation**:
+    - Built a simple, clean React frontend using Vite in `./frontend/`.
+    - Added root `package.json` with scripts delegating `npm run dev` and `npm run build` directly to `frontend/`.
+    - Created FastAPI server in `src/api.py` exposing `/api/chat` and `/api/health` with CORS support for local development (`localhost:5173`) and Vercel domains (`*.vercel.app`).
+    - Updated `TELECOM_SYSTEM_PROMPT` in `src/rag_chain.py` to remove all bracketed citations (`[Source: ...]`) and metadata tags, ensuring direct, professional, citation-free answers.
+    - Added `vercel.json` at root and in `frontend/` preconfigured for Vercel SPA deployment.
+    - Verified production build (`npm run build`) and dev proxy (`http://localhost:5173/api/health`).
 
 ---
 
@@ -196,9 +202,11 @@ telecom RAG/
    - *Query*: *"Are there any active cell tower outages in the Northridge area, and what was the resolution for ticket TK-001 regarding mobile internet?"*
    - *Result*: Accurately extracted active degradation alert on Northridge Tower B-14 (ETA 2 hours) from `tickets.db (service_alerts)`. When asked specifically for ticket TK-001, retrieved APN reset and airplane mode toggle instructions with 100% fidelity.
 
-### Ad-Hoc User Query Verification (`uv run python test_rag.py "..."`):
-- *Query*: `uv run python test_rag.py "How do I check my current data balance?"`
-- *Result*: Exited with code 0. Retrieved 7 chunks across `faqs.csv` (data category), `telecom_technical_guide.pdf` (Page 4), and `tickets.db` (TK-003, TK-019). Accurately synthesized the response providing USSD code `*123#`, MyTelecom app instructions (`My Usage`), automated push alert thresholds (80% and 100%), and ticket TK-003 advice for app cache refresh.
+### Web Frontend & API Verification:
+- **FastAPI Endpoint (`GET /api/health`)**: Responded `{"status":"ok","service":"telecom-rag-api"}` with code 200.
+- **FastAPI Chat Endpoint (`POST /api/chat`)**: Queried `"How do I check my account balance?"`. Answer generated without any bracketed citation tags (`[Source: ...]`).
+- **Frontend Production Build**: `npm run build` executed successfully via Vite, compiling `dist/index.html`, `dist/assets/*.css`, and `dist/assets/*.js` in 17s with 0 errors.
+- **Vite API Proxy (`GET http://localhost:5173/api/health`)**: Verified seamless proxying from frontend port 5173 to backend port 8000.
 
 ---
 
@@ -207,19 +215,43 @@ telecom RAG/
 > [!IMPORTANT]
 > The dependencies are installed in the local `.venv` managed by `uv`. Running via global system Python (e.g. `C:\Python314\python.exe`) will fail with `ModuleNotFoundError: No module named 'rich'`. Always use `uv run` or invoke `.venv\Scripts\python.exe`.
 
-### Commands:
+### Web Frontend & Backend:
 
-1. **Interactive Chat Mode (Default - Ask Questions in Real Time)**:
+1. **Start the Backend API Server**:
+   ```powershell
+   uv run uvicorn src.api:app --host 127.0.0.1 --port 8000
+   ```
+
+2. **Start the Frontend Development Server**:
+   ```powershell
+   npm run dev
+   # or from frontend directory:
+   cd frontend; npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
+
+3. **Build Frontend for Production**:
+   ```powershell
+   npm run build
+   ```
+
+4. **Deploying to Vercel**:
+   - Push your repository to GitHub.
+   - Import the project into Vercel.
+   - The included `vercel.json` automatically runs the build (`npm --prefix frontend run build`) and routes all SPA paths.
+   - In Vercel Project Settings > Environment Variables, add:
+     - `VITE_API_URL`: URL of your deployed Python backend (e.g. on Render, Railway, or VPS).
+
+### CLI Modes:
+
+1. **Interactive Chat Mode (Ask Questions in Real Time)**:
    ```powershell
    uv run python test_rag.py
-   # or explicitly:
-   uv run python test_rag.py --interactive
    ```
 
 2. **Ask a Single Question Directly via CLI**:
    ```powershell
    uv run python test_rag.py "How do I activate international roaming?"
-   uv run python test_rag.py "Are there any active cell tower outages in Northridge?"
    ```
 
 3. **Run Automated Benchmark Test Suite**:
@@ -230,18 +262,6 @@ telecom RAG/
 4. **Re-ingest Source Data (Force Overwrite)**:
    ```powershell
    uv run python src/ingestion.py --force
-   # or
-   uv run python test_rag.py --reingest
-   ```
-
-5. **Direct Virtual Environment Execution**:
-   ```powershell
-   .\.venv\Scripts\python.exe test_rag.py
-   ```
-
-6. **Run Type Checking (Pyright)**:
-   ```powershell
-   uv run --with pyright pyright
    ```
 
 ---
@@ -249,27 +269,16 @@ telecom RAG/
 ## 7. Troubleshooting & Common Issues Log
 
 ### Issue: `Cannot find module 'src.config'` in IDE (Pyright/Pylance)
-- **Symptom**: Red squiggly lines on imports like `from src.config import settings` in `src/rag_chain.py` with the message:
-  `Looked in these locations ... Import root (inferred from project layout): "c:\project folder\telecom RAG\src"`.
-- **Root Cause**: Pyright's default project layout heuristic assumes standard `src`-layout (where `src/` is the import root directory containing modules, rather than being the top-level package itself). As a result, Pyright looked for `src/src/config.py` instead of `src/config.py`. At runtime, `uv run` executes from the workspace root where `src` contains `__init__.py`, so runtime imports succeeded while static analysis failed.
-- **Fix Applied**:
-  1. Configured `[tool.pyright]` in `pyproject.toml`:
-     ```toml
-     [tool.pyright]
-     extraPaths = ["."]
-     venvPath = "."
-     venv = ".venv"
-     ```
-  2. Fixed default parameter type annotations in `src/rag_chain.py` by changing `retriever: TelecomMergedRetriever = None` to `Optional[TelecomMergedRetriever] = None`.
+- **Symptom**: Red squiggly lines on imports like `from src.config import settings` in `src/rag_chain.py`.
+- **Fix Applied**: Configured `[tool.pyright]` in `pyproject.toml` with `extraPaths = ["."]`, `venvPath = "."`, `venv = ".venv"`.
 - **Verification**: `uv run --with pyright pyright` returns `0 errors, 0 warnings`.
 
+### Issue: `npm error ENOENT Could not read package.json` when running from root
+- **Symptom**: Running `npm run dev` or `npm run build` in root folder fails with `ENOENT: no such file or directory, open package.json`.
+- **Fix Applied**: Added root `package.json` with delegation scripts (`"dev": "npm --prefix frontend run dev"`, `"build": "npm --prefix frontend run build"`). Users can now run npm commands directly from workspace root or inside `frontend/`.
+
 ### Issue: `source : The term 'source' is not recognized` on Windows PowerShell
-- **Symptom**: Running `source .\.venv\Scripts\activate` fails with error `The term 'source' is not recognized as a name of a cmdlet, function, script file...`.
-- **Root Cause**: `source` is a POSIX / Bash command. Windows PowerShell does not use `source`.
-- **Fix**: Run `.venv\Scripts\activate` directly, or simply run commands with `uv run <command>`, which automatically executes within `.venv`.
+- **Fix**: Run `.venv\Scripts\activate` directly, or simply run commands with `uv run <command>`.
 
-### Policy & Troubleshooting: Environment Secrets & `.env` Ignored by Git
-- **Symptom**: `.env` is omitted from GitHub repository clones, resulting in `ValueError: Missing valid Google Gemini API Key` on fresh clone.
-- **Root Cause**: `.env` contains live credentials and is strictly ignored in `.gitignore` (`.env`, `.env.*`). It must never be checked in.
-- **Fix for New Environments**: Copy the included template `.env.example` to `.env` (`cp .env.example .env`) and supply a valid Google Gemini API key obtained from Google AI Studio.
-
+### Policy: Environment Secrets & `.env` Ignored by Git
+- **Fix for New Environments**: Copy `.env.example` to `.env` (`cp .env.example .env`) and supply a valid Google Gemini API key.

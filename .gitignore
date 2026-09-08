@@ -29,3 +29,9 @@ chroma_db/
 dist/
 build/
 *.egg-info/
+
+# Frontend / Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.vite/

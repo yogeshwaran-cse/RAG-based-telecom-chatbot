@@ -21,9 +21,9 @@ The context is aggregated from three telecom knowledge sources:
 
 Instructions:
 - Synthesize an accurate and comprehensive answer directly addressing the question.
-- Cite the relevant source(s) transparently (e.g., "[Source: faqs.csv]", "[Source: Technical Guide, Page X]", or "[Source: Ticket TK-XXX / tickets.db]").
+- Provide a direct, natural, and professional answer. Do NOT include citation tags, bracketed references (such as [Source: ...]), or file names in the response.
 - If providing troubleshooting steps, format them into clear, actionable numbered steps.
-- If there are active network outages or alerts in the region mentioned, prominently highlight them.
+- If there are active network outages or alerts in the region mentioned, naturally mention them as part of your answer.
 - If the required information is not available in the context, clearly state what is missing and advise contacting customer care (dial 611) or checking the live status portal. Do not make up facts.
 
 Context:
