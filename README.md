@@ -87,6 +87,10 @@ telecom RAG/
 │   ├── package.json          # Frontend dependencies (React 19, Lucide, Vite)
 │   ├── vite.config.js        # Vite dev server & proxy configuration
 │   └── src/                  # React components & modern design system
+│       ├── components/       # UI Components (Sidebar, ThemeToggle)
+│       ├── App.jsx           # Main chat layout, history state & prompt feed
+│       ├── api.js            # API client for /api/chat
+│       └── index.css         # Design system & dark/light theme tokens
 │
 ├── chroma_db/                # Persistent vector database collections (local development)
 └── src/                      # Offline Data Ingestion & ChromaDB RAG Engine
@@ -115,6 +119,14 @@ uv sync --extra dev
 ```
 
 ### 3. Web Frontend (React + FastAPI)
+
+The web UI provides a modern, interactive experience:
+- **Direct Chat Landing**: Users land directly on the chat session with the input bar focused and active conversation restored.
+- **Collapsible Sidebar**: Openable via the header button, featuring:
+  - **Multi-Session History**: Auto-saves past conversations in browser `localStorage`, dynamic session titles, relative timestamps, and delete actions.
+  - **Searchable FAQs Hub**: 18 categorized telecom FAQs with live search and category pills (*Roaming*, *Connectivity*, *SIM & Device*, *Billing*, *Data & Voice*). Clicking any question asks the assistant immediately.
+- **Light & Dark Theme Switcher**: Toggle between midnight slate dark mode and clean light mode, with automatic system preference detection and persistence.
+
 You can launch the web application in two steps:
 
 **Step A: Start the FastAPI Backend API**

@@ -123,6 +123,10 @@ telecom RAG/
 │   ├── package.json          # Frontend dependencies (React 19, Lucide, Vite)
 │   ├── vite.config.js        # Vite dev server & proxy configuration
 │   └── src/                  # React components & styles
+│       ├── components/       # UI Components (Sidebar, ThemeToggle)
+│       ├── App.jsx           # Main chat layout & state
+│       ├── api.js            # API client for /api/chat
+│       └── index.css         # Design system & dark/light theme tokens
 ├── chroma_db/                # Persistent ChromaDB vector stores (local development)
 └── src/                      # Offline Data Ingestion & ChromaDB RAG Engine
     ├── __init__.py
@@ -236,6 +240,15 @@ telecom RAG/
     - Added explicit `if docs is None or metas is None or embs is None:` guard before zipping, cleanly narrowing the types for static analysis.
     - Added `# pyright: ignore[reportCallIssue]` for `google_api_key` on `GoogleGenerativeAIEmbeddings`.
     - Verified with `uv run --with pyright pyright` across the codebase (0 errors, 0 warnings).
+19. **UI Enhancement: Collapsible Sidebar (History & FAQs) and Light/Dark Theme Switcher**:
+    - Added a modern collapsible sidebar in `frontend/src/components/Sidebar.jsx` supporting:
+      - **Multi-session Chat History**: Saves conversations into browser `localStorage`, dynamic session titles, timestamps, and delete controls.
+      - **New Chat**: Clean button to start fresh support sessions.
+      - **Searchable FAQs Hub**: 18 categorized telecom FAQs with live search filter and category pill navigation. Clicking any FAQ directly queries the RAG assistant.
+    - Added a persistent Light/Dark Theme toggle in `frontend/src/components/ThemeToggle.jsx` with animated Sun and Moon icons, synced with system preference and `localStorage`.
+    - Upgraded `frontend/src/index.css` with comprehensive CSS custom properties for `[data-theme="light"]` and `[data-theme="dark"]`, featuring deep slate hues, glowing blue accents, responsive overlay drawer for mobile, and modern typography.
+    - Configured direct chat session landing: `sidebarOpen` defaults to `false`, immediately focusing the chat input and restoring the active conversation so users land directly inside the chat interface.
+    - Verified successful production build (`npm run build` in 4.54s) and HTTP server response.
 
 ---
 
