@@ -20,7 +20,7 @@ def get_embedding_model() -> GoogleGenerativeAIEmbeddings:
     validate_config()
     return GoogleGenerativeAIEmbeddings(
         model=settings.EMBEDDING_MODEL,
-        google_api_key=settings.GOOGLE_API_KEY,
+        google_api_key=settings.GOOGLE_API_KEY,  # pyright: ignore[reportCallIssue]
     )
 
 
@@ -98,8 +98,69 @@ def ingest_all_sources(force: bool = False) -> Dict[str, Any]:
     return results
 
 
+import json
+from pathlib import Path
+from typing import Optional
+
+
+def export_embedded_knowledge(output_path: Optional[Path] = None) -> Path:
+    """
+    Export vector documents and embeddings from all three ChromaDB collections
+    into a consolidated JSON file for lightweight serverless deployment.
+    """
+    if output_path is None:
+        output_path = settings.DATA_DIR / "embedded_knowledge.json"
+
+    print(f"\n[*] Exporting embedded knowledge to: {output_path}")
+    collections = [
+        settings.COLLECTION_FAQS,
+        settings.COLLECTION_MANUALS,
+        settings.COLLECTION_DB,
+    ]
+
+    export_payload: Dict[str, list] = {}
+    total_docs = 0
+
+    for coll_name in collections:
+        vs = get_vectorstore(coll_name)
+        data = vs._collection.get(include=["documents", "metadatas", "embeddings"])
+        docs = data.get("documents")
+        metas = data.get("metadatas")
+        embs = data.get("embeddings")
+
+        if docs is None or metas is None or embs is None:
+            print(f"    - Warning: Incomplete data or empty vectors in '{coll_name}'")
+            continue
+
+        coll_items = []
+        for doc_text, meta, emb in zip(docs, metas, embs):
+            coll_items.append({
+                "content": doc_text,
+                "metadata": meta or {},
+                "embedding": list(emb) if emb is not None else [],
+            })
+
+        export_payload[coll_name] = coll_items
+        total_docs += len(coll_items)
+        print(f"    - Extracted {len(coll_items)} vectors from '{coll_name}'")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(export_payload, f)
+
+    file_size_mb = output_path.stat().st_size / (1024 * 1024)
+    print(f"[+] Successfully exported {total_docs} vectors ({file_size_mb:.2f} MB) -> {output_path}\n")
+    return output_path
+
+
 if __name__ == "__main__":
     import sys
 
     force_run = "--force" in sys.argv
+    export_run = "--export" in sys.argv
+
     ingest_all_sources(force=force_run)
+
+    if export_run:
+        export_embedded_knowledge()
+
