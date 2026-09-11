@@ -352,6 +352,16 @@ export default function Sidebar({
             <Sparkles size={12} />
             <span>ChromaDB RAG Grounded</span>
           </div>
+          <div className="sidebar-credits">
+            Data courtesy of{' '}
+            <a
+              href="https://codebasics.io/resources/agentic-ai-crash-course"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Codebasics
+            </a>
+          </div>
         </div>
       </aside>
     </>

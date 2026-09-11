@@ -8,7 +8,7 @@ This document records the full context, user requirements, architecture decision
 
 ### User Goals
 - **Domain**: Telecom customer support, technical troubleshooting, network operations, and billing inquiry chatbot.
-- **Data Sources**: Contained in `./data/`:
+- **Data Sources**: Provided courtesy of **[Codebasics](https://codebasics.io/)** ([Agentic AI Crash Course](https://codebasics.io/resources/agentic-ai-crash-course)), contained in `./data/`:
   - `data/faqs.csv`: 25 FAQ entries covering account balance, SIM, VoLTE, roaming, and billing.
   - `data/telecom_technical_guide.pdf`: 9-page internal technical guide covering network generations, roaming architecture, SIM technology, and diagnostic steps.
   - `data/tickets.db`: SQLite database containing 3 tables: `tickets` (23 historical support tickets), `service_alerts` (3 active/scheduled alerts), and `customers` (7 customer account profiles).
@@ -249,6 +249,13 @@ telecom RAG/
     - Upgraded `frontend/src/index.css` with comprehensive CSS custom properties for `[data-theme="light"]` and `[data-theme="dark"]`, featuring deep slate hues, glowing blue accents, responsive overlay drawer for mobile, and modern typography.
     - Configured direct chat session landing: `sidebarOpen` defaults to `false`, immediately focusing the chat input and restoring the active conversation so users land directly inside the chat interface.
     - Verified successful production build (`npm run build` in 4.54s) and HTTP server response.
+20. **Dataset Credit Attribution to Codebasics**:
+    - Credited **[Codebasics](https://codebasics.io/)** ([Agentic AI Crash Course](https://codebasics.io/resources/agentic-ai-crash-course)) for providing the project dataset (`faqs.csv`, `telecom_technical_guide.pdf`, `tickets.db`).
+    - Added attribution links to:
+      - `README.md`: New `## 🙏 Acknowledgements & Credits` section.
+      - `frontend/src/App.jsx`: Main chat footer input disclaimer.
+      - `frontend/src/components/Sidebar.jsx`: Collapsible sidebar footer.
+      - `frontend/src/index.css`: Styled credits hyperlinks for light/dark themes.
 
 ---
 

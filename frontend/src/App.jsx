@@ -428,7 +428,14 @@ export default function App() {
               </button>
             </form>
             <div className="input-disclaimer">
-              AI assistant powered by Google Gemini & ChromaDB.
+              AI assistant powered by Google Gemini & ChromaDB. Data provided by{' '}
+              <a
+                href="https://codebasics.io/resources/agentic-ai-crash-course"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Codebasics
+              </a>.
             </div>
           </div>
         </footer>

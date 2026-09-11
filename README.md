@@ -198,3 +198,9 @@ uv run --extra dev python test_rag.py --reingest
 | `telecom_tickets_db` | `data/tickets.db` | 23 support tickets, 3 active/scheduled service alerts, 7 customer accounts | `table`, `ticket_id`, `severity`, `category` |
 
 The `TelecomMergedRetriever` dynamically gathers relevant documents across all three vector collections, eliminates content duplicates, and formats them into transparently labeled source blocks for the Google Gemini chat model.
+
+---
+
+## 🙏 Acknowledgements & Credits
+
+Special thanks to **[Codebasics](https://codebasics.io/)** for providing the telecom support dataset (`faqs.csv`, `telecom_technical_guide.pdf`, and `tickets.db`) used to build this project as part of their **[Agentic AI Crash Course](https://codebasics.io/resources/agentic-ai-crash-course)**.
