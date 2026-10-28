@@ -22,6 +22,9 @@ dev = [
     "pypdf>=4.0.0",
     "rich>=13.0.0",
     "uvicorn>=0.30.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.8.0",
+    "ipykernel>=6.0.0",
 ]
 
 [build-system]

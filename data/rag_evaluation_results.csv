@@ -1,0 +1,9 @@
+id,category,source_hit_rate,context_recall,context_relevance,faithfulness,answer_relevance,semantic_similarity,constraint_compliance,rag_triad_score,total_latency_ms
+EVAL-01,Customer FAQ (Roaming),1.0,0.6,0.9,1.0,1.0,0.9422,1.0,0.9643,23615.3
+EVAL-02,Customer FAQ (SIM Replacement),1.0,0.4,0.8,0.85,1.0,0.841,1.0,0.8755,19631.2
+EVAL-03,Technical Guide (Diagnostics),1.0,0.4,0.9,1.0,1.0,0.8541,1.0,0.9643,23868.0
+EVAL-04,Technical Guide (VoLTE Architecture),1.0,0.2,0.5,1.0,0.8,0.8035,1.0,0.7059,13825.9
+EVAL-05,Operations DB (Tower Outages),1.0,0.5,0.85,1.0,1.0,0.8941,1.0,0.9444,21120.3
+EVAL-06,Operations DB (Support Tickets),1.0,0.75,1.0,1.0,0.85,0.8813,1.0,0.9444,21403.2
+EVAL-07,Cross-Domain Multi-Source,1.0,1.0,1.0,1.0,1.0,0.8625,1.0,1.0,16926.6
+EVAL-08,Negative Control (Out-of-Scope),1.0,0.5,0.0,1.0,1.0,0.8524,1.0,0.0,63476.9
